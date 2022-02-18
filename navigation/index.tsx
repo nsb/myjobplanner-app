@@ -7,8 +7,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import * as React from 'react';
 import { ColorSchemeName, Pressable } from 'react-native';
+import type { DrawerScreenProps } from '@react-navigation/drawer';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -19,11 +21,21 @@ import TabTwoScreen from '../screens/TabTwoScreen';
 import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 
+type DrawerParamList = {
+  Modal: undefined
+}
+type ModalProps = DrawerScreenProps<DrawerParamList, 'Modal'>;
+
+const Drawer = createDrawerNavigator<DrawerParamList>();
+
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
     <NavigationContainer
       linking={LinkingConfiguration}
       theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      {/* <Drawer.Navigator initialRouteName='Modal'>
+        <Drawer.Screen name="Modal" component={ModalScreen} />
+      </Drawer.Navigator> */}
       <RootNavigator />
     </NavigationContainer>
   );
@@ -66,7 +78,7 @@ function BottomTabNavigator() {
         name="TabOne"
         component={TabOneScreen}
         options={({ navigation }: RootTabScreenProps<'TabOne'>) => ({
-          title: 'Tab One',
+          title: 'Calendar',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
           headerRight: () => (
             <Pressable
@@ -88,7 +100,7 @@ function BottomTabNavigator() {
         name="TabTwo"
         component={TabTwoScreen}
         options={{
-          title: 'Tab Two',
+          title: 'Clients',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
