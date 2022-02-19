@@ -8,10 +8,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 import Navigation from './navigation';
+import BusinessSelect from './screens/BusinessSelect';
 
-const CLIENT_ID = 'JaYsxceKwumuaqH2E0cPp7XjDfy6ljlA';
-const DOMAIN = 'myjobplanner.eu.auth0.com';
-const authorizationEndpoint = `https://${DOMAIN}/authorize`;
+const AUTH0_CLIENT_ID = 'JaYsxceKwumuaqH2E0cPp7XjDfy6ljlA';
+const AUTH0_DOMAIN = 'myjobplanner.eu.auth0.com';
+const AUTH0_IDENTIFIER = 'https://api.myjobplanner.com'
+const authorizationEndpoint = `https://${AUTH0_DOMAIN}/authorize`;
+const tokenEndpoint = `https://${AUTH0_DOMAIN}/oauth/token`;
 const useProxy = Platform.select({ default: false });
 const redirectUri = AuthSession.makeRedirectUri({ useProxy });
 
@@ -23,31 +26,41 @@ export default function App() {
   const [request, result, promptAsync] = AuthSession.useAuthRequest(
     {
       redirectUri,
-      clientId: CLIENT_ID,
-      responseType: 'id_token',
+      clientId: AUTH0_CLIENT_ID,
+      responseType: 'code',
       scopes: [
         'openid',
+        'email',
         'profile',
         'create:business',
         'update:business',
         'read:business'
       ],
       extraParams: {
-        nonce: 'nonce'
+        nonce: 'nonce',
+        audience: `${AUTH0_IDENTIFIER}`
       }
     },
     { authorizationEndpoint }
   )
 
-  // console.log(`Redirect URL: ${redirectUri}`);
-
   useEffect(() => {
+    const fetchAccessToken = async (code: string) => {
+      const tokenResult = await AuthSession.exchangeCodeAsync({
+        code,
+        clientId: AUTH0_CLIENT_ID,
+        redirectUri: redirectUri,
+        extraParams: {
+          code_verifier: request?.codeVerifier || ""
+        }
+      }, { tokenEndpoint })
+      setToken(tokenResult.accessToken)
+    }
+
     if (result) {
       if (result.type === 'success') {
-        const jwtToken = result.params.id_token;
-        setToken(jwtToken);
-        const decoded = jwtDecode(jwtToken);
-        console.log(decoded);
+        fetchAccessToken(result.params.code)
+          .catch(console.error)
       }
     }
   }, [result])
@@ -67,8 +80,9 @@ export default function App() {
   } else {
     return (
       <SafeAreaProvider>
-        <Navigation colorScheme={colorScheme} />
-        <StatusBar />
+        <BusinessSelect jwtToken={token} />
+        {/* <Navigation colorScheme={colorScheme} />
+        <StatusBar /> */}
       </SafeAreaProvider>
     );
   }
