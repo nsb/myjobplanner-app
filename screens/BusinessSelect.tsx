@@ -19,7 +19,7 @@ type Props = {
 }
 
 export default function BusinessSelect({ jwtToken }: Props) {
-    const [data, setData] = useState<Business[]>([]);
+    const [businesses, setBusinesses] = useState<Business[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -33,7 +33,7 @@ export default function BusinessSelect({ jwtToken }: Props) {
             });
             if (resp.ok) {
                 const data = await resp.json();
-                setData(data);
+                setBusinesses(data);
             }
         } catch (error) {
             console.log(error)
@@ -54,10 +54,25 @@ export default function BusinessSelect({ jwtToken }: Props) {
         fetchData();
     }, []);
 
-    return loading ? null : (
-        <View>
-            {data.map(renderItem)}
-        </View>
-    )
+    if (loading) {
+        return (
+            <View>
+                <Text>Loading...</Text>
+            </View>
+        )
+    } else {
+        switch (businesses.length) {
+            case 0:
+                return null // TODO: Show add business
+            case 1:
+                return null // TODO: show business screen
+            default:
+                return loading ? null : (
+                    <View>
+                        {businesses.map(renderItem)}
+                    </View>
+                )
+        }
+    }
 
 }
